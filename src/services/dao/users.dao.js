@@ -1,31 +1,63 @@
-import userModel from "../models/user.model.js";
+import { userModel } from "../../models/user.model.js";
+
+
 class UserDao {
-    async getUserById(userId) {
-        try {
-        const user = await userModel.findById(userId);
-        return user;
-        } catch (error) {
-        throw new Error(`Error fetching user by ID: ${error.message}`);
-        }
-    }
 
-    async getUserByEmail(email) {
-        try {
-        const user = await userModel.findOne({ email });
-        return user;
-        } catch (error) {
-        throw new Error(`Error fetching user by email: ${error.message}`);
-        }
-    }
+  static async createUser(user) {
+    try {
+      const existingUser = await userModel.findOne({ email: user.email });
+      if (existingUser) {
+        throw new Error('Email already exists');
+      }
 
-    async createUser(userData) {
-        try {
-        const newUser = await userModel.create(userData);
-        return newUser;
-        } catch (error) {
-        throw new Error(`Error creating user: ${error.message}`);
-        }
+      // If not, create the user
+      return await userModel.create(user);
+    } catch (error) {
+      throw error;
     }
+  }
+
+  async getUserByEmail(email) {
+    try {
+      return await userModel.findOne({ email: email });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getUserById(id) {
+    try {
+      return await userModel.findById(id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async getAllUsers() {
+    try {
+      return await userModel.find();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateUser(id, user) {
+    try {
+      return await userModel.findByIdAndUpdate(id, user);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteUser(id) {
+    try {
+      return await userModel.findByIdAndDelete(id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
 }
 
-export default new UserDao();
+
+export default UserDao;

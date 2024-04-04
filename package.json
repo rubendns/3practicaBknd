@@ -31,6 +31,7 @@
     "mongoose-paginate-v2": "^1.7.4",
     "nanoid": "^5.0.3",
     "nodemailer": "^6.9.10",
+    "uuidv4": "^6.2.13",
     "passport": "^0.7.0",
     "passport-github": "^1.1.0",
     "passport-github2": "^0.1.12",

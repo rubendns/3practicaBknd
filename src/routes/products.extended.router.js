@@ -1,38 +1,40 @@
 import CustomRouter from "./custom/custom.router.js";
 import {
-  createProduct,
-  deleteProduct,
-  getAllProducts,
-  getProductById,
-  updateProduct
+  createProductController,
+  deleteProductController,
+  getAllProductsController,
+  getProductByIdController,
+  updateProductController
 } from "../controllers/products.controller.js";
+import { verificarPropietarioMiddleware } from "../middlewares/owner.middleware.js";
+
 export default class ProductExtendRouter extends CustomRouter {
   init() {
 
     // Obtener un producto por ID
     this.get('/:id', ["PUBLIC"], async (req, res) => {
-      getProductById(req, res)
+      getProductByIdController(req, res)
     });
 
     // Get all products
     this.get('/', ["PUBLIC"], async (req, res) => {
-      getAllProducts(req, res)
+      getAllProductsController(req, res)
     });
 
     // Crear un nuevo producto
-    this.post('/', ["ADMIN"], async (req, res) => {
-      createProduct(req, res)
+    this.post('/', ["ADMIN", "PREMIUM"], async (req, res) => {
+      createProductController(req, res)
     });
 
 
     // Actualizar un producto por ID
-    this.put('/:id', ["ADMIN"], async (req, res) => {
-      updateProduct(req, res)
+    this.put('/:id', ["ADMIN", "PREMIUM"], verificarPropietarioMiddleware, async (req, res) => {
+      updateProductController(req, res)
     });
 
     // Eliminar un producto por ID
-    this.delete('/:id', ["ADMIN"], async (req, res) => {
-      deleteProduct(req, res)
+    this.delete('/:id', ["ADMIN", "PREMIUM"], verificarPropietarioMiddleware, async (req, res) => {
+      deleteProductController(req, res)
     });
 
   }

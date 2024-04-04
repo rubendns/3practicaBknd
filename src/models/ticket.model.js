@@ -4,7 +4,7 @@ import mongoosePaginate from "mongoose-paginate-v2";
 const ticketSchema = new Schema({
   code: {
     type: String,
-    default: "AAA222",
+    default: "ABC123",
     required: false
   },
   purchase_datetime: {

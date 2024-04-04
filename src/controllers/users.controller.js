@@ -1,57 +1,63 @@
-import userService from "../services/users.services.js";
+import { UserDto } from "../services/dto/user.dto.js";
+import { userService } from "../services/repository/services.js";
 
-class UserController {
-    async register(req, res) {
-        try {
-        const userData = req.body;
-        const newUser = await userService.registerUser(userData);
-        res
-            .status(201)
-            .json({ message: "User registered successfully", user: newUser });
-        } catch (error) {
-        res.status(500).json({ error: error.message });
+export const getUserProfileController = async (req, res) => {
+    try {
+        const userId = req.params.uid;
+        const userProfile = await userService.getUserById(userId);
+        if (!userProfile) {
+        return res.status(404).json({ error: "User not found" });
         }
+        const user = new UserDto(
+        userProfile.username,
+        userProfile.email,
+        userProfile.type
+        );
+        console.log(user);
+        res.json({ userProfile: user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal server error" });
     }
+};
 
-    async login(req, res) {
-        try {
-        const { email, password } = req.body;
-        const token = await userService.authenticateUser(email, password);
-        res.status(200).json({ token });
-        } catch (error) {
-        res.status(401).json({ error: error.message });
+export const getToken = async (userId) => {
+    try {
+        const userProfile = await userService.getUserById(userId);
+        if (!userProfile) {
+        return { error: "User not found" };
         }
+        return {
+        resultToken: userProfile.resetToken,
+        tokenTime: userProfile.resetTokenExpiration,
+        };
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal server error" });
     }
+};
 
-    async getUserById(req, res) {
-        try {
-        const userId = req.params.userId;
-        const user = await userService.getUserById(userId);
-        if (!user) {
-            res.status(404).json({ message: `User not found with ID: ${userId}` });
-        } else {
-            res.status(200).json({ user });
+export const getPassword = async (userId) => {
+    try {
+        const userProfile = await userService.getUserById(userId);
+        if (!userProfile) {
+        return { error: "User not found" };
         }
-        } catch (error) {
-        res.status(500).json({ error: error.message });
-        }
+        return { password: userProfile.password };
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal server error" });
     }
+};
 
-    async getUserByEmail(req, res) {
-        try {
-        const email = req.params.email;
-        const user = await userService.getUserByEmail(email);
-        if (!user) {
-            res
-            .status(404)
-            .json({ message: `User not found with email: ${email}` });
-        } else {
-            res.status(200).json({ user });
-        }
-        } catch (error) {
-        res.status(500).json({ error: error.message });
-        }
+export const updateUserRol = async (req, res) => {
+    const userId = req.params.uid;
+    const user = await userService.getUserById(userId);
+    let nuevoRol = user.rol;
+    if (user.rol === "premium") {
+        nuevoRol = "standar";
+    } else {
+        nuevoRol = "premium";
     }
-}
-
-export default new UserController();
+    return userService.updateUser(userId, { rol: nuevoRol });
+};

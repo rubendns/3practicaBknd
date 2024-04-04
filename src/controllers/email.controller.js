@@ -1,79 +1,58 @@
-import nodemailer from 'nodemailer';
-import config from '../config/config.js';
-import __dirname from '../utils.js'
+import transporter from "../utils.js";
+import { v4 as uuidv4 } from "uuid";
+import { userService } from "../services/repository/services.js";
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    port: 587,
-    auth: {
-        user: config.gmailAccount,
-        pass: config.gmailAppPassword
-    }
-})
-
-// Verificamos conexion con gmail
-transporter.verify(function (error, success) {
-    if (error) {
-        console.log(error);
-    } else {
-        console.log('Correct connection with the mail server!');
-    }
-})
-
-const mailOptions = {
-    from: "Coder Test - " + config.gmailAccount,
-    to: 'rubendns@gmail.com',
-    subject: "Correo de prueba simple",
-    html: `<div><h1> Esto es un test de correo desde la aplicacion </h1></div>`,
-    attachments: []
-}
-
-const mailOptionsWithAttachments = {
-    from: "Coder Test - " + config.gmailAccount,
-    to: `${config.gmailAccount}`,
-    subject: "Correo de prueba con adjuntos",
-    html: `<div>
-                <h1>Esto es un Test de envio de correos con Nodemailer!</h1>
-                <p>Ahora usando imagenes: </p>
-                <img src="cid:meme"/>
-            </div>`,
-    attachments: [
-        {
-            filename: 'Meme de programacion',
-            path: __dirname + '/public/images/tux.jpeg',
-            cid: 'meme'
+export const sendMail = async (email, subject, html, attachments) => {
+    try {
+        if (!email || !subject || !html) {
+        throw new Error(
+            "Dirección de correo electrónico, asunto y contenido HTML son obligatorios."
+        );
         }
-    ]
-}
-
-export const sendEmail = (req, res) => {
-    try {
-        let result = transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log(error);
-                res.status(400).send({ message: "Error", payload: error });
-            }
-            console.log('Message sent: %s', info.messageId);
-            res.send({ message: "Success", payload: info })
-        })
+        const result = await transporter.sendMail({
+        from: "UR-SHOP!",
+        to: email,
+        subject: subject,
+        html: html,
+        attachments: attachments,
+        });
+        return `Correo electrónico enviado a ${email}. ID del mensaje: ${result.messageId}`;
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ error: error, message: "Could not send email from:" + config.gmailAccount });
+        console.error("Error al enviar el correo electrónico:", error);
+        throw error;
     }
-}
+};
 
-export const sendEmailWithAttachments = (req, res) => {
+export const sendForgotMail = async (email, attachments, userId) => {
     try {
-        let result = transporter.sendMail(mailOptionsWithAttachments, (error, info) => {
-            if (error) {
-                console.log(error);
-                res.status(400).send({ message: "Error", payload: error });
-            }
-            console.log('Message sent: %s', info.messageId);
-            res.send({ message: "Success", payload: info })
-        })
+        const user = await userService.getUserByEmail(email);
+        const resetToken = uuidv4();
+        const resetTokenExpiration = Date.now() + 3600000;
+        const resetLink = `http://127.0.0.1:8080/mailer/reset-password?token=${resetToken}&uid=${user._id}`;
+        // Aquí deberías almacenar el token en tu base de datos
+        // junto con el correo electrónico y la marca de tiempo
+        const updatedUser = await userService.updateUser(user._id, {
+        resetToken,
+        resetTokenExpiration,
+        });
+
+        const result = await transporter.sendMail({
+        from: "UR-SHOP!",
+        to: email,
+        subject: "Restablece tu contraseña",
+        html: `
+        <p>Hola! Solicitaste restablecer tu contraseña de UR-SHOP!</p>
+        <p>Haz clic en el siguiente botón para restablecer tu contraseña:</p>
+        <a href="${resetLink}">Restablecer contraseña</a>
+        `,
+        attachments: attachments,
+        });
+        return `Correo electrónico de restablecimiento de cuenta, enviado a ${email}. ID del mensaje: ${result.messageId}`;
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ error: error, message: "Could not send email from:" + config.gmailAccount });
+        console.error(
+        "Error al enviar el correo de restablecimiento de contraseña:",
+        error
+        );
+        throw error;
     }
-}
+};

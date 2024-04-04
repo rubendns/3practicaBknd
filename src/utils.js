@@ -3,7 +3,7 @@ import { dirname } from "path";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import passport from "passport";
-import {faker} from "@faker-js/faker";
+import  nodemailer from "nodemailer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -11,10 +11,15 @@ const __dirname = dirname(__filename);
 // Generamos y validamos el hash
 export const createHash = (password) =>
   bcrypt.hashSync(password, bcrypt.genSaltSync(10));
-export const isValidPassword = (user, password) => {
+
+  export const isValidPassword = (user, password) => {
   //console.log(`Datos a validar: user-password: ${user.passwordHash}, password: ${password}`);
   return bcrypt.compareSync(password, user.passwordHash);
 };
+
+export const comparePasswords = (userInputPassword, storedHash) => {
+  return bcrypt.compareSync(userInputPassword, storedHash);
+}
 
 //JSON Web Tokens JWT functinos:
 export const PRIVATE_KEY = "CoderhouseBackendCourseSecretKeyJWT";
@@ -80,17 +85,14 @@ export const authorization = (role) => {
   };
 };
 
-export const generateProducts = () => {
-  return {
-    title: faker.commerce.productName(),
-    description: faker.lorem.paragraph(),
-    code: faker.string.uuid(),
-    price: faker.commerce.price(),
-    status: faker.datatype.boolean(),
-    stock: faker.string.numeric(2),
-    category: faker.commerce.department(),
-    thumbnail: faker.image.url(),
-  };
-};
+
+export const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  port: 587,
+  auth: {
+    user: 'rubendns@gmail.com',
+    pass: 'moualmufpperpiab'
+  }
+});
 
 export default __dirname;

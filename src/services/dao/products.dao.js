@@ -1,67 +1,72 @@
-import { productModel } from "../models/products.model.js";
+import { productModel } from "../../models/products.model.js";
+
 class ProductDao {
-  async getAllProducts(page, limit, sort) {
+  // Insert a new product
+  async addProduct(productData) {
     try {
-      const options = {
-        page: parseInt(page) || 1,
-        limit: parseInt(limit) || 10,
-      };
-
-      if (sort !== undefined) {
-        options.sort = { price: parseInt(sort) };
-      }
-
-      const response = await productModel.paginate({}, options);
-
-      return response;
+      await productModel.create(productData);
     } catch (error) {
-      throw new Error("Error fetching products: " + error.message);
+      throw error;
     }
   }
 
-  async getProductById(pid) {
+  // Retrieve all products
+  async getAllProducts({ limit = 10, page = 1, sort = "asc", category = "all" }) {
+
+    const filter = {
+      status: true,
+      category: category
+    };
+
+    const sorted = sort === "asc" ? 1 : -1;
+
     try {
-      const product = await productModel.findById(pid);
-      if (!product) {
-        throw new Error("Product not found");
+      const result = await productModel.paginate(filter, { limit: limit, page: page, sort: { price: sorted } });
+  
+      if (page > result.totalPages) {
+        throw new Error("Requested page exceeds total pages");
       }
-      return product;
+  
+      return result;
     } catch (error) {
-      throw new Error("Error fetching product: " + error.message);
+      throw error;
     }
   }
 
-  async createProduct(product) {
+  // Retrieve a product by ID
+  async getProductById(productId) {
     try {
-      return await productModel.create(product);
+      return await productModel.findById(productId);
     } catch (error) {
-      throw new Error("Error creating product: " + error.message);
+      throw error;
     }
   }
 
-  async updateProduct(pid, product) {
+  // Update a product by ID
+  async updateProduct(productId, updatedData) {
     try {
-      const updatedProduct = await productModel.findByIdAndUpdate(pid, product, { new: true });
-      if (!updatedProduct) {
-        throw new Error("Product not found");
-      }
-      return updatedProduct;
+      return await productModel.findByIdAndUpdate(productId, updatedData)
     } catch (error) {
-      throw new Error("Error updating product: " + error.message);
+      throw error;
     }
   }
 
-  async deleteProduct(pid) {
+  // Delete a product by ID
+  async deleteProduct(productId) {
     try {
-      const deletedProduct = await productModel.findByIdAndDelete(pid);
-      if (!deletedProduct) {
-        throw new Error("Product not found");
-      }
-      return deletedProduct;
+      return await productModel.findByIdAndDelete(productId);
     } catch (error) {
-      throw new Error("Error deleting product: " + error.message);
+      throw error;
+    }
+  }
+
+  async updateStock(productId, qtty) {
+    try {
+      return await productModel.updateOne( { _id: productId}, { $set: { stock: qtty }});
+    } catch (error) {
+      throw error;
     }
   }
 }
 
-export default new ProductDao();
+export default ProductDao;

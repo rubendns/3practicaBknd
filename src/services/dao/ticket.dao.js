@@ -1,4 +1,5 @@
-import { ticketModel } from "../models/ticket.model.js";
+import { ticketModel } from "../../models/ticket.model.js";
+
 class TicketDao {
   async createTicket(ticketData) {
     try {
@@ -13,7 +14,7 @@ class TicketDao {
       const tickets = await ticketModel.find();
       return tickets;
     } catch (error) {
-      throw new Error('Error getting tickets: ' + error.message);
+      throw new Error('Error al obtener los tickets: ' + error.message);
     }
   }
 
@@ -21,7 +22,7 @@ class TicketDao {
     try {
       return await ticketModel.findById(ticketId);
     } catch (error) {
-      throw new Error('Error getting ticket: ' + error.message);
+      throw new Error('Error al obtener el ticket: ' + error.message);
     }
   }
 
